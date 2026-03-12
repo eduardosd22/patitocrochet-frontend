@@ -422,12 +422,21 @@ const OrdersPanel = ({ token }) => {
   };
 
   const updateStatus = async (id, status) => {
-    const res = await fetch(`${API_URL}/api/orders/${id}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ status })
-    });
-    if (res.ok) fetchOrders();
+    try {
+      const res = await fetch(`${API_URL}/api/orders/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        fetchOrders();
+      } else {
+        const data = await res.json();
+        alert('Error al actualizar: ' + data.error);
+      }
+    } catch (err) {
+      alert('Error de red al actualizar estado');
+    }
   };
 
   const btnAction = (label, color, bg, border, onClick) => (
