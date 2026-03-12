@@ -240,26 +240,34 @@ const ProductsPanel = ({ token }) => {
     setForm({ name: '', category: 'amigurumis', price: '', description: '', imageUrl: '', stock: 99, available: true });
     setImageFile(null); setImagePreview('');
     setEditProduct(null); setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const openEdit = (p) => {
     setForm({ name: p.name, category: p.category, price: p.price, description: p.description, imageUrl: p.imageUrl || '', stock: p.stock ?? 99, available: p.available ?? true });
     setImageFile(null); setImagePreview(p.imageUrl || '');
     setEditProduct(p); setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const finalImageUrl = await uploadImage();
-    const method = editProduct ? 'PUT' : 'POST';
-    const url = editProduct ? `${API_URL}/api/products/${editProduct._id}` : `${API_URL}/api/products`;
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ ...form, price: Number(form.price), stock: Number(form.stock), imageUrl: finalImageUrl })
-    });
-    setShowForm(false);
-    fetchProducts();
+    try {
+      const finalImageUrl = await uploadImage();
+      const method = editProduct ? 'PUT' : 'POST';
+      const url = editProduct ? `${API_URL}/api/products/${editProduct._id}` : `${API_URL}/api/products`;
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ ...form, price: Number(form.price), stock: Number(form.stock), imageUrl: finalImageUrl })
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión.');
+    } finally {
+      setShowForm(false);
+      fetchProducts();
+    }
   };
 
   const handleDelete = async (id) => {
