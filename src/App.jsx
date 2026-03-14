@@ -6,7 +6,6 @@ import QuoteChat from './pages/QuoteChat';
 import AdminPanel from './pages/AdminPanel';
 import OrderTracking from './pages/OrderTracking';
 import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import MyOrders from './pages/MyOrders';
 import Profile from './pages/Profile';
@@ -33,7 +32,6 @@ function App() {
                 <Route path="/admin"        element={<AdminPanel />} />
                 <Route path="/rastrear"     element={<OrderTracking />} />
                 <Route path="/carrito"      element={<Cart />} />
-                <Route path="/checkout"     element={<Checkout />} />
                 <Route path="/confirmacion" element={<OrderConfirmation />} />
                 <Route path="/mis-pedidos"  element={<MyOrders />} />
                 <Route path="/perfil"       element={<Profile />} />

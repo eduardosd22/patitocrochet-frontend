@@ -2,10 +2,61 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Trash2, ArrowRight, ArrowLeft, Package } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const Cart = () => {
   const navigate = useNavigate();
   const { cartItems, removeItem, total, clearCart } = useCart();
+  const { currentUser } = useAuth();
+  
+  const [loading, setLoading] = useState(false);
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+  const handleCheckout = async () => {
+    if (!currentUser) {
+      navigate('/login', { state: { returnTo: '/carrito' } });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        clientData: {
+          name: currentUser.displayName || currentUser.name || 'Cliente',
+          email: currentUser.email,
+          address: ''
+        },
+        items: cartItems.map(item => ({
+          product:    item._id || item.id || null,
+          name:       item.name,
+          price:      Number(item.price),
+          quantity:   item.quantity || 1,
+          category:   item.category || '',
+          isAIGenerated: item.isAIGenerated || false,
+          customDetails: item.customDetails || ''
+        })),
+        totalAmount: total
+      };
+
+      const res = await fetch(`${API_URL}/api/orders/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Error al procesar el pedido');
+
+      clearCart();
+      navigate('/confirmacion', { state: { orderCode: data.orderCode, email: currentUser.email, name: currentUser.displayName || 'Cliente' } });
+
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -96,12 +147,19 @@ const Cart = () => {
               </span>
             </div>
             <button
-              onClick={() => navigate('/checkout')}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', backgroundColor: 'var(--color-brand-dark)', color: 'white', border: 'none', borderRadius: '9999px', padding: '0.875rem', fontWeight: '700', fontSize: '0.95rem', cursor: 'pointer', transition: 'opacity 0.2s' }}
-              onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
-              onMouseOut={e => e.currentTarget.style.opacity = '1'}
+              onClick={handleCheckout}
+              disabled={loading}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', backgroundColor: loading ? '#9ca3af' : 'var(--color-brand-dark)', color: 'white', border: 'none', borderRadius: '9999px', padding: '0.875rem', fontWeight: '700', fontSize: '0.95rem', cursor: loading ? 'not-allowed' : 'pointer', transition: 'opacity 0.2s' }}
+              onMouseOver={e => !loading && (e.currentTarget.style.opacity = '0.9')}
+              onMouseOut={e => !loading && (e.currentTarget.style.opacity = '1')}
             >
-              Proceder al pago <ArrowRight size={16} />
+               {loading ? (
+                <>Procesando pedido...</>
+               ) : currentUser ? (
+                <>Proceder al pago <ArrowRight size={16} /></>
+              ) : (
+                <>Acceder para continuar <ArrowRight size={16} /></>
+              )}
             </button>
             <div style={{ textAlign: 'center', fontSize: '0.72rem', color: '#9ca3af', marginTop: '0.75rem' }}>
               Pago coordinado por WhatsApp tras confirmar el pedido

@@ -14,7 +14,6 @@ const Checkout = () => {
   const [form, setForm] = useState({
     name:  currentUser?.displayName || '',
     email: currentUser?.email || '',
-    phone: '',
     notes: ''
   });
   const [loading, setLoading] = useState(false);
@@ -31,10 +30,9 @@ const Checkout = () => {
           ...prev,
           name:  data.name  || currentUser.displayName || '',
           email: data.email || currentUser.email || '',
-          phone: data.phone || '',
           notes: data.address || ''
         }));
-        if (data.phone) setProfileLoaded(true); // muestra el aviso solo si hay datos
+        if (data.name || data.address) setProfileLoaded(true); // muestra el aviso solo si hay datos
       })
       .catch(() => {});
   }, [currentUser]);
@@ -65,7 +63,6 @@ const Checkout = () => {
         clientData: {
           name:    form.name,
           email:   form.email,
-          phone:   form.phone,
           address: form.notes || ''
         },
         items: cartItems.map(item => ({
@@ -95,7 +92,7 @@ const Checkout = () => {
         fetch(`${API_URL}/api/users/profile`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUser.token}` },
-          body: JSON.stringify({ name: form.name, phone: form.phone, address: form.notes })
+          body: JSON.stringify({ name: form.name, address: form.notes })
         }).catch(() => {}); // silencioso, no bloqueante
       }
 
@@ -128,10 +125,10 @@ const Checkout = () => {
           </h1>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'start' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap-reverse', gap: '1.5rem', alignItems: 'flex-start' }}>
 
           {/* Formulario */}
-          <div style={{ backgroundColor: 'white', borderRadius: '1rem', padding: '2rem', border: '1px solid #f3f4f6' }}>
+          <div style={{ flex: '1 1 350px', backgroundColor: 'white', borderRadius: '1rem', padding: '2rem', border: '1px solid #f3f4f6' }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: '700', color: 'var(--color-brand-dark)', marginBottom: '1.5rem' }}>
               Tus datos de contacto
             </h2>
@@ -146,7 +143,7 @@ const Checkout = () => {
                   </span>
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={labelStyle}>Nombre completo *</label>
                   <div style={{ position: 'relative' }}>
@@ -158,30 +155,18 @@ const Checkout = () => {
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Teléfono / WhatsApp *</label>
+                  <label style={labelStyle}>Correo electrónico *</label>
                   <div style={{ position: 'relative' }}>
-                    <input name="phone" value={form.phone} onChange={handleChange} required placeholder="+593 99 999 9999" style={{ ...inputStyle, paddingLeft: '2.5rem' }}
+                    <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="tu@correo.com" style={{ ...inputStyle, paddingLeft: '2.5rem' }}
                       onFocus={e => { e.target.style.borderColor = '#d1d5db'; e.target.style.boxShadow = '0 0 0 3px rgba(255,243,199,0.5)'; }}
                       onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
                     />
-                    <Phone size={15} color="#9ca3af" style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                    <Mail size={15} color="#9ca3af" style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
                   </div>
                 </div>
               </div>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={labelStyle}>Correo electrónico *</label>
-                <div style={{ position: 'relative' }}>
-                  <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="tu@correo.com" style={{ ...inputStyle, paddingLeft: '2.5rem' }}
-                    onFocus={e => { e.target.style.borderColor = '#d1d5db'; e.target.style.boxShadow = '0 0 0 3px rgba(255,243,199,0.5)'; }}
-                    onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
-                  />
-                  <Mail size={15} color="#9ca3af" style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#2563eb', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#eff6ff', padding: '0.4rem 0.625rem', borderRadius: '0.5rem' }}>
-                  <Mail size={12} /> Recibirás tu código de seguimiento en este correo
-                </div>
-              </div>
+
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={labelStyle}>Notas adicionales (opcional)</label>
@@ -197,13 +182,7 @@ const Checkout = () => {
                 </div>
               )}
 
-              {/* Aviso correo antes del botón */}
-              <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.75rem', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-                <Mail size={15} color="#2563eb" style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: '0.78rem', color: '#1d4ed8', lineHeight: '1.5' }}>
-                  Al confirmar, recibirás un correo con tu <strong>código de seguimiento</strong>. Revisa también en spam.
-                </span>
-              </div>
+
 
               <button type="submit" disabled={loading} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', backgroundColor: loading ? '#e5e7eb' : 'var(--color-brand-dark)', color: loading ? '#9ca3af' : 'white', border: 'none', borderRadius: '9999px', padding: '0.875rem', fontWeight: '700', fontSize: '1rem', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}>
                 <ShoppingBag size={18} />
@@ -213,7 +192,7 @@ const Checkout = () => {
           </div>
 
           {/* Resumen lateral */}
-          <div style={{ backgroundColor: 'white', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #f3f4f6', position: 'sticky', top: '90px' }}>
+          <div style={{ flex: '1 1 300px', width: '100%', backgroundColor: 'white', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #f3f4f6', position: 'sticky', top: '90px', alignSelf: 'flex-start' }}>
             <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '700', color: 'var(--color-brand-dark)', marginBottom: '1rem', fontSize: '0.95rem' }}>
               Resumen ({cartItems.length} {cartItems.length === 1 ? 'producto' : 'productos'})
             </h3>
